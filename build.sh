@@ -1,17 +1,18 @@
 #!/usr/bin/env bash
-
 # Exit immediately if a command exits with a non-zero status
 set -euo pipefail
-
 # --- Configuration ---
 SECONDS=0
 USER="google"
 HOSTNAME="mintdroid"
 DEVICE_TARGET=${DEVICE_TARGET:-"X00TD"}
+# === Tambahin ini ===
+DEFCONFIG_PATH=${DEFCONFIG_PATH:-"vendor/asus"}
+DEFCONFIG="${DEFCONFIG_PATH}/${DEVICE_TARGET}_defconfig"
+# ===================
 OUT_DIR="$(pwd)/out"
 COMP_LOG="$OUT_DIR/compilation.log"
 KCFLAGS_W=${KCFLAGS_W:-"false"}
-DEFCONFIG="vendor/asus/${DEVICE_TARGET}_defconfig"
 COMP_OPTION=${COMP_OPTION:-"llvm"}
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 
