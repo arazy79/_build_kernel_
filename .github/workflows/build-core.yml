@@ -11,6 +11,10 @@ on:
       DEVICE_TARGET:
         description: 'Device to build'
         type: string
+      DEFCONFIG_PATH:
+        description: 'Path folder defconfig'
+        type: string
+        default: 'vendor/asus'
       CUSTOM_ARTIFACT_NAME:
         description: 'Custom Artifact Name'
         type: string
@@ -100,6 +104,7 @@ jobs:
         TG_TOKEN: ${{ secrets.TG_TOKEN }}
         TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
         DEVICE_TARGET: ${{ inputs.DEVICE_TARGET }}
+        DEFCONFIG_PATH: "${{ inputs.DEFCONFIG_PATH }}"
         CI_ZIPNAME: "${{ steps.buildKernel.outputs.buildDetails }}.zip"
         KCFLAGS_W: "${{ inputs.KCFLAGS_W }}"
         EXTRA_CONFIG: "${{ inputs.EXTRA_CONFIG }}"
