@@ -15,6 +15,10 @@ on:
         default: 'X00TD'
         type: choice
         options: [X01BD, X00TD]
+      DEFCONFIG_PATH:
+        description: 'Path folder defconfig (tanpa akhiran /)'
+        default: 'asus'
+        required: false
       UPDATE_TOOLCHAIN:
         description: 'Update toolchain cache'
         type: boolean
@@ -28,8 +32,8 @@ on:
         type: boolean
         default: false
       EXTRA_CONFIG:
-        description: 'Use Extra defconfig'
-        default: 'vendor/extra/disable_thermal.config'
+        description: 'Extra defconfig'
+        default: ''
 
 jobs:
   build:
@@ -39,6 +43,7 @@ jobs:
       KERNEL_REPO: ${{ github.event.inputs.KERNEL_REPO }}
       BRANCH: ${{ github.event.inputs.BRANCH }}
       DEVICE_TARGET: ${{ github.event.inputs.DEVICE_TARGET }}
+      DEFCONFIG_PATH: ${{ github.event.inputs.DEFCONFIG_PATH }}
       UPDATE_TOOLCHAIN: ${{ github.event.inputs.UPDATE_TOOLCHAIN == 'true' }}
       USE_GCC: ${{ github.event.inputs.USE_GCC == 'true' }}
       KCFLAGS_W: ${{ github.event.inputs.KCFLAGS_W == 'true' }}
