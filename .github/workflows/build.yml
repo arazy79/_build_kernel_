@@ -18,7 +18,7 @@ on:
       ENABLE_KSU:
         description: 'Build with KernelSU'
         type: boolean
-        default: true
+        default: false
       KSU:
         description: 'Add KernelSU support'
         default: "https://raw.githubusercontent.com/backslashxx/KernelSU/master/kernel/setup.sh"
