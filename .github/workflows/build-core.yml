@@ -110,6 +110,7 @@ jobs:
       run: bash ./build.sh --fetch-toolchains
 
     - name: Build Kernel
+      shell: bash
       env:
         TG_UPLOAD: ${{ inputs.NEED_UPLOAD }}
         TG_TOKEN: ${{ secrets.TG_TOKEN }}
@@ -119,18 +120,48 @@ jobs:
         KCFLAGS_W: "${{ inputs.KCFLAGS_W }}"
         EXTRA_CONFIG: "${{ inputs.EXTRA_CONFIG }}"
         COMP_OPTION: "${{ steps.curr_compiler.outputs.active_compiler }}"
+        KSU: "${{ inputs.KSU }}"
+        KSU_BRANCH: "${{ inputs.KSU_BRANCH }}"
+        UPDATE_TOOLCHAIN: "${{ inputs.UPDATE_TOOLCHAIN }}"
       run: |
-        if [[ "${{ inputs.UPDATE_TOOLCHAIN }}" != "true" ]]; then
+        if [[ "$UPDATE_TOOLCHAIN" != "true" ]]; then
           cd kernel_root
           if [ ! -d ~/.ccache ]; then
             mkdir -p ~/.ccache
           fi
+
           # Handle KernelSU
-          if [[ "$KSU" != "NULL" ]]; then
-            curl -LSs "${{ inputs.KSU }}" | bash -s ${{ inputs.KSU_BRANCH }}
+          if [[ -n "$KSU" && "$KSU" != "NULL" ]]; then
+            echo "::group::KernelSU setup"
+            echo "KSU script : $KSU"
+            echo "KSU branch : $KSU_BRANCH"
+            curl -LSs "$KSU" | bash -s "$KSU_BRANCH"
+
+            echo "--- drivers/kernelsu ---"
+            ls -la drivers/kernelsu || true
+            echo "--- Makefile / Kconfig hook ---"
+            grep -n kernelsu drivers/Makefile drivers/Kconfig || true
+            echo "--- get_ksu_state: definisi di driver ---"
+            grep -Rn "get_ksu_state" drivers/kernelsu/ | head || true
+            echo "--- get_ksu_state: pemanggil di fs/ ---"
+            grep -n "get_ksu_state" fs/*.c | head || true
+            echo "::endgroup::"
+
+            # Fail cepat kalau hook di fs/ tidak cocok dengan versi KSU
+            if grep -q "get_ksu_state" fs/*.c && ! grep -Rq "get_ksu_state" drivers/kernelsu/; then
+              echo "::error::Hook fs/ memanggil get_ksu_state, tapi KSU yang di-setup tidak mendefinisikannya. Versi KSU tidak cocok dengan hook di source kernel."
+              exit 1
+            fi
           fi
+
           bash ../build.sh
         fi
+
+    - name: Debug CONFIG_KSU (on failure)
+      if: failure() && inputs.UPDATE_TOOLCHAIN != 'true'
+      run: |
+        cd kernel_root
+        grep -n "CONFIG_KSU" out/.config || echo "CONFIG_KSU tidak ada di out/.config"
 
     - name: Upload kernel artifacts
       uses: actions/upload-artifact@v5
@@ -147,3 +178,4 @@ jobs:
         name: AK3-${{ steps.buildKernel.outputs.buildDetails }}
         path: kernel_root/AnyKernel3/*
         retention-days: 5
+        
