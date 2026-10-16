@@ -25,7 +25,7 @@ on:
       KSU_BRANCH:
         description: 'KernelSU branch/tag'
         required: false
-        default: 'v3.3.1-11
+        default: 'v3.3.1-11'
       ENABLE_SUSFS:
         description: 'Add SUSFS (butuh KernelSU)'
         type: boolean
