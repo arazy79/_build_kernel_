@@ -8,7 +8,7 @@ on:
         required: true
       BRANCH:
         description: 'Kernel branch'
-        default: 'lineage-23.2'
+        default: 'fastcharge-test'
         required: true
       DEVICE_TARGET:
         description: 'Device to build'
@@ -23,11 +23,11 @@ on:
         description: 'Add KernelSU support'
         default: "https://raw.githubusercontent.com/backslashxx/KernelSU/master/kernel/setup.sh"
       KSU_BRANCH:
-        description: 'KernelSU branch'
-        required: true
-        default: 'master'
+        description: 'KernelSU branch/tag (kosongkan = otomatis pakai tag terbaru)'
+        required: false
+        default: ''
       ENABLE_SUSFS:
-        description: 'Add SUSFS (needs KernelSU enabled)'
+        description: 'Add SUSFS (butuh KernelSU)'
         type: boolean
         default: false
       SUSFS_REPO:
@@ -41,15 +41,15 @@ on:
         type: boolean
         default: false
       USE_GCC:
-        description: 'Use GCC for compilation instead of LLVM'
+        description: 'Pakai GCC alih-alih LLVM'
         type: boolean
         default: false
       KCFLAGS_W:
-        description: 'Enable KCFLAGS=-w'
+        description: 'Aktifkan KCFLAGS=-w'
         type: boolean
         default: false
       EXTRA_CONFIG:
-        description: 'Use Extra defconfig'
+        description: 'Extra defconfig'
         default: 'vendor/extra/disable_thermal.config'
 
 jobs:
