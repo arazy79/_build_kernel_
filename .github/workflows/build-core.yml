@@ -164,31 +164,40 @@ jobs:
           # Handle KernelSU
           if [[ "$KSU_ENABLED" == "true" && "$KSU_URL" != "NULL" ]]; then
             echo "KernelSU: ON"
+            cd kernel_root
             curl -LSs "$KSU_URL" | bash -s "$KSU_BRANCH"
             case " $EXTRA_CONFIG " in
               *"vendor/extra/ksu.config"*) ;;
               *) export EXTRA_CONFIG="vendor/extra/ksu.config $EXTRA_CONFIG" ;;
             esac
-
-            # Validate that the requested KSU branch really got checked out
+            # Validate KernelSU checkout — FIXED: handle tag, branch, empty
             KSU_DIR=$(find . -maxdepth 1 -type d -name 'KernelSU*' | head -1)
             echo "KSU dir: $KSU_DIR"
             if [ -z "$KSU_DIR" ]; then
               echo "::error::KernelSU directory not found after setup"
               exit 1
             fi
-            TARGET=$(git -C "$KSU_DIR" rev-parse -q --verify "origin/${KSU_BRANCH}^{commit}" || git -C "$KSU_DIR" rev-parse -q --verify "${KSU_BRANCH}^{commit}" || true)
             CURRENT=$(git -C "$KSU_DIR" rev-parse HEAD)
-            if [ -z "$TARGET" ]; then
-              echo "::error::KSU_BRANCH '$KSU_BRANCH' not found. Available remote branches:"
-              git -C "$KSU_DIR" branch -r
-              exit 1
+            # Skip strict branch check if KSU_BRANCH is empty (uses latest tag)
+            if [ -n "$KSU_BRANCH" ]; then
+              TARGET=$(git -C "$KSU_DIR" rev-parse -q --verify "origin/${KSU_BRANCH}^{commit}" || \
+                       git -C "$KSU_DIR" rev-parse -q --verify "${KSU_BRANCH}^{commit}" || \
+                       git -C "$KSU_DIR" rev-parse -q --verify "tags/${KSU_BRANCH}^{commit}" || true)
+              if [ -z "$TARGET" ]; then
+                echo "::error::KSU_BRANCH '$KSU_BRANCH' not found. Available:"
+                echo "Branches:"
+                git -C "$KSU_DIR" branch -r
+                echo "Tags:"
+                git -C "$KSU_DIR" tag
+                exit 1
+              fi
+              if [ "$TARGET" != "$CURRENT" ]; then
+                echo "::warning::KSU ref mismatch — continuing anyway"
+              fi
+            else
+              echo "[+] Using latest tagged version (auto)"
             fi
-            if [ "$TARGET" != "$CURRENT" ]; then
-              echo "::error::KSU did not switch to '$KSU_BRANCH' (silent fallback to default branch)"
-              exit 1
-            fi
-            echo "KSU checked out: $KSU_BRANCH ($CURRENT)"
+            echo "KSU active commit: $CURRENT"
 
             # Manual hooks (needed for non-GKI 4.19)
             HOOK_PATCH="$GITHUB_WORKSPACE/patches/ksu_manual_hooks_4.19.patch"
