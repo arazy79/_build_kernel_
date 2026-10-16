@@ -11,9 +11,13 @@ on:
       DEVICE_TARGET:
         description: 'Device to build'
         type: string
+      ENABLE_KSU:
+        description: 'Enable KernelSU'
+        type: boolean
+        default: false
       KSU:
-        description: 'Add KernelSU support'
-        default: 'NULL'
+        description: 'KernelSU setup.sh URL'
+        default: ''
         type: string
       KSU_BRANCH:
         description: 'KernelSU branch'
@@ -34,7 +38,7 @@ on:
       EXTRA_CONFIG:
         description: 'Use Extra defconfig'
         type: string
-        default: 'NULL'
+        default: ''
       NEED_UPLOAD:
         description: 'Upload kernel to Telegram'
         type: boolean
@@ -99,7 +103,13 @@ jobs:
         gitsha1=$(git rev-parse --short HEAD)
         CODENAME=$(cat ../codename)
 
-        echo "buildDetails=$CODENAME-${{ inputs.DEVICE_TARGET }}-$(date +%Y%m%d)_$(echo $gitsha1)-NIGHTLY" >> $GITHUB_OUTPUT
+        if [[ "${{ inputs.ENABLE_KSU }}" == "true" ]]; then
+          KSU_TAG="KSU"
+        else
+          KSU_TAG="NOKSU"
+        fi
+
+        echo "buildDetails=$CODENAME-${{ inputs.DEVICE_TARGET }}-$KSU_TAG-$(date +%Y%m%d)_$(echo $gitsha1)-NIGHTLY" >> $GITHUB_OUTPUT
         echo "currDate=$(date)" >> $GITHUB_OUTPUT
 
     - name: Fetch Toolchains
@@ -120,6 +130,7 @@ jobs:
         KCFLAGS_W: "${{ inputs.KCFLAGS_W }}"
         EXTRA_CONFIG: "${{ inputs.EXTRA_CONFIG }}"
         COMP_OPTION: "${{ steps.curr_compiler.outputs.active_compiler }}"
+        ENABLE_KSU: "${{ inputs.ENABLE_KSU }}"
         KSU: "${{ inputs.KSU }}"
         KSU_BRANCH: "${{ inputs.KSU_BRANCH }}"
         UPDATE_TOOLCHAIN: "${{ inputs.UPDATE_TOOLCHAIN }}"
@@ -131,7 +142,12 @@ jobs:
           fi
 
           # Handle KernelSU
-          if [[ -n "$KSU" && "$KSU" != "NULL" ]]; then
+          if [[ "$ENABLE_KSU" == "true" ]]; then
+            if [[ -z "$KSU" || "$KSU" == "NULL" ]]; then
+              echo "::error::ENABLE_KSU dicentang tapi URL setup.sh (KSU) kosong."
+              exit 1
+            fi
+
             echo "::group::KernelSU setup"
             echo "KSU script : $KSU"
             echo "KSU branch : $KSU_BRANCH"
@@ -152,6 +168,13 @@ jobs:
               echo "::error::Hook fs/ memanggil get_ksu_state, tapi KSU yang di-setup tidak mendefinisikannya. Versi KSU tidak cocok dengan hook di source kernel."
               exit 1
             fi
+          else
+            echo "KernelSU: OFF"
+            # Buang ksu.config supaya CONFIG_KSU tidak nyala tanpa driver
+            EXTRA_CONFIG="${EXTRA_CONFIG//vendor\/extra\/ksu.config/}"
+            EXTRA_CONFIG="$(echo $EXTRA_CONFIG)"
+            export EXTRA_CONFIG
+            echo "EXTRA_CONFIG (tanpa ksu): '$EXTRA_CONFIG'"
           fi
 
           bash ../build.sh
@@ -178,4 +201,3 @@ jobs:
         name: AK3-${{ steps.buildKernel.outputs.buildDetails }}
         path: kernel_root/AnyKernel3/*
         retention-days: 5
-        
