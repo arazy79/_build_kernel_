@@ -15,8 +15,12 @@ on:
         default: 'X00TD'
         type: choice
         options: [X01BD, X00TD]
+      ENABLE_KSU:
+        description: 'Enable KernelSU (centang = ON)'
+        type: boolean
+        default: true
       KSU:
-        description: 'Add KernelSU support'
+        description: 'KernelSU setup.sh URL (dipakai kalau KSU ON)'
         default: "https://raw.githubusercontent.com/backslashxx/KernelSU/master/kernel/setup.sh"
       KSU_BRANCH:
         description: 'KernelSU branch'
@@ -46,6 +50,7 @@ jobs:
       KERNEL_REPO: ${{ github.event.inputs.KERNEL_REPO }}
       BRANCH: ${{ github.event.inputs.BRANCH }}
       DEVICE_TARGET: ${{ github.event.inputs.DEVICE_TARGET }}
+      ENABLE_KSU: ${{ github.event.inputs.ENABLE_KSU == 'true' }}
       KSU: ${{ github.event.inputs.KSU }}
       KSU_BRANCH: ${{ github.event.inputs.KSU_BRANCH }}
       UPDATE_TOOLCHAIN: ${{ github.event.inputs.UPDATE_TOOLCHAIN == 'true' }}
