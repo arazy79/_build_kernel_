@@ -4,53 +4,39 @@ on:
     inputs:
       KERNEL_REPO:
         description: 'Kernel URL repository'
-        default: 'https://github.com/arazy79/android-kernel-tes-4.19'
+        default: 'https://github.com/rsuntk/android_kernel_asus_sdm660-4.19'
         required: true
       BRANCH:
         description: 'Kernel branch'
-        default: 'fastcharge-test'
+        default: 'master'
         required: true
       DEVICE_TARGET:
         description: 'Device to build'
-        default: 'X00TD'
+        default: 'X01BD'
         type: choice
         options: [X01BD, X00TD]
-      ENABLE_KSU:
-        description: 'Build with KernelSU'
-        type: boolean
-        default: true
       KSU:
         description: 'Add KernelSU support'
         default: "https://raw.githubusercontent.com/backslashxx/KernelSU/master/kernel/setup.sh"
       KSU_BRANCH:
-        description: 'KernelSU branch/tag'
-        required: false
-        default: 'v3.3.1-11'
-      ENABLE_SUSFS:
-        description: 'Add SUSFS (butuh KernelSU)'
-        type: boolean
-        default: false
-      SUSFS_REPO:
-        description: 'SUSFS repository'
-        default: 'https://gitlab.com/simonpunk/susfs4ksu.git'
-      SUSFS_BRANCH:
-        description: 'SUSFS branch'
-        default: 'kernel-4.19'
+        description: 'KernelSU branch'
+        required: true
+        default: 'master'
       UPDATE_TOOLCHAIN:
         description: 'Update toolchain cache'
         type: boolean
         default: false
       USE_GCC:
-        description: 'Pakai GCC alih-alih LLVM'
+        description: 'Use GCC for compilation instead of LLVM'
         type: boolean
         default: false
       KCFLAGS_W:
-        description: 'Aktifkan KCFLAGS=-w'
+        description: 'Enable KCFLAGS=-w'
         type: boolean
         default: false
       EXTRA_CONFIG:
-        description: 'Extra defconfig'
-        default: 'vendor/extra/disable_thermal.config'
+        description: 'Use Extra defconfig'
+        default: 'vendor/extra/ksu.config vendor/extra/disable_thermal.config'
 
 jobs:
   build:
@@ -60,12 +46,8 @@ jobs:
       KERNEL_REPO: ${{ github.event.inputs.KERNEL_REPO }}
       BRANCH: ${{ github.event.inputs.BRANCH }}
       DEVICE_TARGET: ${{ github.event.inputs.DEVICE_TARGET }}
-      ENABLE_KSU: ${{ github.event.inputs.ENABLE_KSU == 'true' }}
       KSU: ${{ github.event.inputs.KSU }}
       KSU_BRANCH: ${{ github.event.inputs.KSU_BRANCH }}
-      ENABLE_SUSFS: ${{ github.event.inputs.ENABLE_SUSFS == 'true' }}
-      SUSFS_REPO: ${{ github.event.inputs.SUSFS_REPO }}
-      SUSFS_BRANCH: ${{ github.event.inputs.SUSFS_BRANCH }}
       UPDATE_TOOLCHAIN: ${{ github.event.inputs.UPDATE_TOOLCHAIN == 'true' }}
       USE_GCC: ${{ github.event.inputs.USE_GCC == 'true' }}
       KCFLAGS_W: ${{ github.event.inputs.KCFLAGS_W == 'true' }}
